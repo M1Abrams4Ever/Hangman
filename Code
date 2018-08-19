@@ -1,0 +1,164 @@
+/*
+-:-:-:-:-:-:-:-:-:-:-:-:-
+Author: Mitchell T.
+Created: 08/14/2018
+Modified: 08/14/2018
+Language: Swift 4.1
+Hardware: iPad Air 2
+-:-:-:-:-:-:-:-:-:-:-:-:-
+*/
+
+//feel free to change these words
+let words: [String] = ["Swift", "Apple", "Playgrounds", "Code", "Programming", "Text", "ObjectiveC", "iPad", "iPhone", "iMac", "ForLoop", "Variable", "Class", "Switch", "Protocol", "Struct", "Enum", "Function"]
+var errors = 0 //used to track how many wrong letters
+let maxErrors = 6 //too many errors and its game over
+var selectedWord: [String] = []//the selected word, but separated into letters
+var guessedWord: [String] = []//the place where the user will enter guessed letters
+var guessedLetters: [String] = []//the letters guessed by the user
+var gameOver = false//if this is true, the game stops running
+
+//selects a word. Input a list of words, output a single word
+func selectWord(fromList: [String])-> String {
+return fromList[Int(arc4random_uniform(UInt32(fromList.count)))].lowercased()
+//returns a random word from the list, lowercased
+}
+
+//splits a word into a list of character strings
+func splitWord(word: String)-> [String]{
+//empty list
+var list: [String] = []
+//editable word
+var eword = word
+for i in 0 ... word.count-1 {
+//add first letter
+list.append(String(eword.first!))
+//remove first letter
+eword.remove(at: eword.startIndex)
+}//repeat until no more letters
+ 
+return list
+}
+
+//the opposite if above
+func joinWord(word: [String])-> String{
+var out = ""
+for i in 0 ... word.count-1 {
+out += word[i]
+}
+return out
+}
+
+//generates blanks
+func blanks(length: Int)-> [String]{
+//empty list
+var list: [String] = []
+//for the length, add a _
+for i in 1 ... length {
+list.append("_")
+}
+ 
+return list
+}
+
+//checks if the user has already guessed the letter
+func checkIfNotGuessed(letter: String)-> Bool{
+if(guessedLetters.contains(letter)){
+//it has been guessed, return false
+return false
+}//else
+//it has not been guessed, return true
+return true
+}
+
+//manages the user guessing a letter
+func makeGuess()->String{
+//blank letter
+var letter = ""
+while(letter.count != 1){
+//keep repeating until the user inserts only 1 letter
+letter = ask("Insert a letter.")
+}
+//good to go, send the letter back
+return letter.lowercased()
+//lowercase it so that even if a capital letter is guessed, the letter will be guessed. (Otherwise the user guesses "M" and there is an "m", the computer doesn't see "M" as "m".)
+}
+
+func guess(letter: String){
+if(checkIfNotGuessed(letter: letter)){
+//letter has not been guessed yet
+guessedLetters.append(letter)
+addToGuessedWord(letter: letter)
+} else {
+//letter has been guessed
+show("You have already guessed the letter \"\(letter)\".")
+}
+}
+
+func checkIfInWord(letter: String)-> Bool{
+if(selectedWord.contains(letter)){
+//contains the letter, return true
+return true
+}//else
+//not in word, return false
+return false
+}
+
+//add guessed letter to guessed word
+func addToGuessedWord(letter: String){
+if(checkIfInWord(letter: letter)){
+for i in 0 ... selectedWord.count-1 {
+if(selectedWord[i] == letter){
+guessedWord[i] = letter
+}
+}
+if(hasWon()){
+show("You won! You guessed the word correctly. The word is \"\(joinWord(word: selectedWord))\".")
+gameOver = true
+} else {
+display()
+}
+} else {
+show("You guessed incorrectly!")
+guessedWrong()
+display()
+}
+}
+
+//occurs when the user guessed incorrectly
+func guessedWrong(){
+errors += 1
+if(errors >= maxErrors){
+gameOver = true
+show("Game over! You lose. The word was: \(joinWord(word: selectedWord)).")
+} else {
+show("You have lost \(errors) out of \(maxErrors) limbs.")
+}
+}
+
+//checks for win
+func hasWon()->Bool{
+if(selectedWord == guessedWord){
+return true
+}//else
+return false
+}
+
+//visually display the hangman
+func display(){
+var output = ""
+for i in 0 ... guessedWord.count-1 {
+output += guessedWord[i] + " "
+}
+output += "\nGuess a letter."
+show(output)
+}
+
+//setup
+selectedWord = splitWord(word: selectWord(fromList: words))
+guessedWord = blanks(length: Int(selectedWord.count))
+display()
+
+//run the game
+while(!gameOver){
+guess(letter: makeGuess())
+}
